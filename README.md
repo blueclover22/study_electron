@@ -114,7 +114,26 @@ pnpm electron-builder --mac --universal
 
 ---
 
-## 스프링부트 연동 시 구조
+## Electron + Spring Boot 연동 구조
+### Electron App
+#### Renderer Process (UI) — React / Vue / 기존 웹 UI
+- 온라인 API 호출 → fetch() → Spring Boot
+- 로컬 처리 호출 → ipcRenderer.invoke() → Main Process
+
+#### Main Process (Node.js)
+- 프린터 제어 — node-thermal-printer
+- 시리얼 통신 — serialport
+- 로컬 DB — better-sqlite3
+- 오프라인 sync queue
+- 자동 업데이트 — electron-updater
+
+### Spring Boot (HTTP 통신)
+- 메뉴 / 재고 관리
+- 매출 / 현황
+- 멀티 포스 동기화
+
+###DB
+- Spring Boot와 연결
 
 ```
 ┌─────────────────────────────────────────────────────┐
