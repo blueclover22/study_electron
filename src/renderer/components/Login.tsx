@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./Login.css";
+import { useAuth } from "../hooks/useAuth";
 
 interface LoginProps {
   onLoginSuccess: (username: string) => void;
@@ -8,33 +9,29 @@ interface LoginProps {
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // 비즈니스 로직을 담당하는 Custom Hook 사용
+  const { login, isLoading, error, setError } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    
+    // 유효성 검사
+    if (!username.trim() || !password.trim()) {
+      setError("사용자명과 비밀번호를 입력해주세요");
+      return;
+    }
 
-    try {
-      if (!username.trim() || !password.trim()) {
-        setError("사용자명과 비밀번호를 입력해주세요");
-        setIsLoading(false);
-        return;
-      }
+    // Hook을 통한 로그인 시도
+    const userInfo = await login({
+      userId: username,
+      userPwd: password,
+    });
 
-      // Electron 스타일의 임시 로그인 검증 (실제로는 IPC 호출 등이 올 수 있음)
-      if (username === "admin" && password === "admin") {
-        onLoginSuccess(username);
-      } else {
-        setError("사용자명 또는 비밀번호가 올바르지 않습니다");
-      }
-    } catch (err) {
-      setError("로그인 중 오류가 발생했습니다");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
+    // 로그인 성공 시에만 화면 전환 콜백 호출
+    if (userInfo) {
+      onLoginSuccess(userInfo.userNm || userInfo.userId || username);
     }
   };
 
@@ -53,8 +50,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               id="username"
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="사용자명을 입력하세요 (admin)"
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (error) setError("");
+              }}
+              placeholder="사용자명을 입력하세요"
               disabled={isLoading}
               autoComplete="username"
               className={error ? "input-error" : ""}
@@ -68,8 +68,11 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 id="password"
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호를 입력하세요 (admin)"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (error) setError("");
+                }}
+                placeholder="비밀번호를 입력하세요"
                 disabled={isLoading}
                 autoComplete="current-password"
                 className={error ? "input-error" : ""}
