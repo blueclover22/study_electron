@@ -1,3 +1,11 @@
+# IDE - VS Code
+.vscode
+
+
+# IDE - IntelliJ/WebStorm
+.idea
+
+
 # Dependency directories
 node_modules/
 jspm_packages/
