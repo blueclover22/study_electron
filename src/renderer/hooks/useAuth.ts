@@ -15,7 +15,7 @@ export const useAuth = () => {
       const userInfo = await authService.login(credentials);
       console.log('[Hook] Login successful, userInfo:', userInfo);
       return userInfo;
-    } catch (err: any) {
+    } catch (err) {
       const message = err.message || "로그인 중 오류가 발생했습니다";
       console.log('[Hook] Login failed, setting error:', message);
       setError(message);

@@ -28,7 +28,7 @@ export const setupIpcHandlers = () => {
 
       console.log('[Main] Login Success');
       return { success: true, data: response.data };
-    } catch (error: any) {
+    } catch (error) {
       console.error('[Main] Login Error:', error);
       // 모든 에러 메시지를 고정 메시지로 통일 (백엔드 메시지 깨짐 방지)
       const errorMessage = '로그인 정보가 올바르지 않습니다.';

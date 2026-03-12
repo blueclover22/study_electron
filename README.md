@@ -1,4 +1,4 @@
-# Electron POS Test Project
+# Electron POS Project
 
 ---
 
