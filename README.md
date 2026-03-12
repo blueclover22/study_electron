@@ -90,7 +90,7 @@ sequenceDiagram
     Bridge ->> Main: ipcRenderer.invoke('auth:login')
     
     Main ->> Main: Axios Instance를 통한 요청 생성
-    Main ->> API: HTTP POST (localhost:8080)
+    Main ->> API: HTTP POST (localhost:6808)
 
     Note over API: [인증 처리 및 응답]
     API -->> Main: JSON (status, info)
@@ -139,20 +139,16 @@ pnpm make
 
 기본적으로 현재 머신의 플랫폼과 아키텍처로 빌드됩니다.
 
-### Windows 빌드 타겟 예시
+### 특정 플랫폼 지정 (Electron Forge)
 ```bash
-# x64 (기본값)
-pnpm electron-builder --win --x64
-# ia32 (32비트)
-pnpm electron-builder --win --ia32
-```
+# Windows 전용 빌드
+pnpm make --platform win32
 
-### macOS 빌드 타겟 예시
-```bash
-# Apple Silicon (M1 이후)
-pnpm electron-builder --mac --arm64
-# Universal Binary
-pnpm electron-builder --mac --universal
+# macOS 전용 빌드
+pnpm make --platform darwin
+
+# Linux 전용 빌드
+pnpm make --platform linux
 ```
 
 ---
