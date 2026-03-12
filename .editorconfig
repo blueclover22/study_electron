@@ -1,0 +1,63 @@
+root = true
+
+# 모든 파일 기본 설정
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 120
+
+# Java 파일
+[*.java]
+indent_size = 4
+max_line_length = 120
+
+# JavaScript/TypeScript 파일
+[*.{js,jsx,ts,tsx}]
+indent_size = 2
+max_line_length = 100
+
+# Vue 파일
+[*.vue]
+indent_size = 2
+max_line_length = 100
+
+# CSS/SCSS 파일
+[*.{css,scss,sass,less}]
+indent_size = 2
+
+# JSON 파일
+[*.{json,jsonc}]
+indent_size = 2
+
+# HTML 파일
+[*.html]
+indent_size = 2
+
+# XML 파일 (pom.xml 포함)
+[*.{xml,pom}]
+indent_size = 2
+
+# YAML 파일
+[*.{yml,yaml}]
+indent_size = 2
+
+# Markdown 파일
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = 80
+
+# Shell scripts
+[*.sh]
+end_of_line = lf
+
+# Windows batch files
+[*.{cmd,bat}]
+end_of_line = crlf
+
+# Makefile
+[Makefile]
+indent_style = tab

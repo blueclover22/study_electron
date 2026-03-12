@@ -1,0 +1,413 @@
+.ticket-sales-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  background-color: #f0f2f5;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* 상단 헤더 */
+.dashboard-header {
+  background: #ffffff;
+  color: #1a1a1a;
+  padding: 12px 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+}
+
+.header-content {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.back-button {
+  padding: 8px 16px;
+  background: #f0f2f5;
+  color: #4a5568;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background: #e2e8f0;
+}
+
+/* 서브 네비게이션 바 (LNB) */
+.sales-sub-nav {
+  display: flex;
+  align-items: center;
+  background-color: #1a202c;
+  padding: 0 20px;
+  height: 50px;
+  gap: 15px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.nav-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #718096;
+  background: rgba(255,255,255,0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.sub-nav-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: #a0aec0;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sub-nav-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.sub-nav-btn.active {
+  background: #3182ce;
+  color: #fff;
+  font-weight: 700;
+}
+
+.nav-divider {
+  width: 1px;
+  height: 20px;
+  background-color: rgba(255,255,255,0.1);
+}
+
+/* 레이아웃 */
+.sales-layout {
+  display: flex;
+  flex: 1;
+  gap: 16px;
+  padding: 16px;
+  overflow: hidden;
+  background: #f7fafc;
+}
+
+/* 왼쪽 패널 */
+.left-panel {
+  width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cart-section, .summary-section {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cart-section {
+  flex: 1;
+}
+
+.summary-section {
+  height: 250px;
+}
+
+.cart-section h3, .summary-section h3 {
+  padding: 16px 20px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  border-bottom: 1px solid #edf2f7;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-section h3::before { content: "🛒"; }
+.summary-section h3::before { content: "📊"; }
+
+.cart-list {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #edf2f7;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.item-name { font-weight: 700; font-size: 14px; color: #2d3748; }
+.item-sub { font-size: 11px; color: #718096; }
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.item-controls button {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  cursor: pointer;
+}
+
+.qty { font-weight: 700; min-width: 20px; text-align: center; }
+.item-price { font-weight: 800; min-width: 80px; text-align: right; color: #2d3748; }
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #e53e3e;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* 합계 영역 */
+.total-area {
+  background: #2d3748;
+  color: #fff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.total-row .label { color: #a0aec0; }
+.total-row.main {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255,255,255,0.2);
+}
+
+.total-row.main .label { font-size: 16px; font-weight: 700; color: #fff; }
+.total-row.main .value.price { font-size: 28px; font-weight: 800; color: #63b3ed; }
+
+/* 금일 판매 현황 */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding: 15px;
+}
+
+.summary-item {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #edf2f7;
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-item:nth-child(5) {
+  grid-column: span 2;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-item .label { font-size: 12px; font-weight: 600; color: #718096; }
+.summary-item .value { font-size: 16px; font-weight: 800; }
+
+.summary-item:nth-child(1) .value { color: #38a169; }
+.summary-item:nth-child(2) .value { color: #3182ce; }
+.summary-item:nth-child(3) .value { color: #d69e2e; }
+.summary-item:nth-child(4) .value { color: #805ad5; }
+.summary-item:nth-child(5) .value { color: #e53e3e; }
+
+/* 오른쪽 패널 */
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.category-nav.main {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.category-nav.main button {
+  height: 50px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-nav.main button.active {
+  background: #3182ce;
+  color: #fff;
+  border-color: #3182ce;
+}
+
+.category-nav.sub {
+  display: flex;
+  background: #edf2f7;
+  padding: 4px;
+  border-radius: 8px;
+  gap: 4px;
+}
+
+.category-nav.sub button {
+  flex: 1;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.category-nav.sub button.active {
+  background: #fff;
+  color: #3182ce;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.product-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-auto-rows: 90px;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.product-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.product-card:hover {
+  border-color: #3182ce;
+  background: #ebf8ff;
+  transform: translateY(-2px);
+}
+
+.product-type { font-weight: 800; font-size: 15px; }
+.product-price { font-size: 13px; color: #3182ce; font-weight: 600; }
+
+/* 하단 액션 영역 */
+.main-action-area {
+  height: 250px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  flex: 1;
+}
+
+.extra-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  flex: 0.7;
+}
+
+.main-pay-btn, .action-btn {
+  border: none;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.main-pay-btn { color: #fff; }
+.main-pay-btn.cash { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); }
+.main-pay-btn.card { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); }
+.main-pay-btn.union { background: linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%); }
+.main-pay-btn.voucher { background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%); }
+
+.action-btn {
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  color: #4a5568;
+  font-weight: 700;
+}
+
+.action-btn.status { border-color: #4299e1; color: #4299e1; }
+.action-btn.reservation { border-color: #9f7aea; color: #9f7aea; }
+
+.main-pay-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+.action-btn:hover { background: #f7fafc; transform: translateY(-2px); }
+
+.btn-icon { font-size: 24px; margin-bottom: 4px; }
+.btn-text { font-size: 16px; font-weight: 800; }
