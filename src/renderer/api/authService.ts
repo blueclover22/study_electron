@@ -13,7 +13,10 @@ export const authService = {
     // 메인 프로세스에서 success: false를 명시적으로 반환한 경우
     if (result.success === false) {
       console.log('[Service] Login Failed - Main returned error:', result.error);
-      throw new Error(result.error || '로그인 중 오류가 발생했습니다.');
+      const errorMessage = typeof result.error === 'string'
+        ? result.error
+        : '로그인 중 오류가 발생했습니다.';
+      throw new Error(errorMessage);
     }
 
     // 성공 케이스만 처리

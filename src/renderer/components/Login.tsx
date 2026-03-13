@@ -88,7 +88,12 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className={`error-message ${error.includes('서버에 연결할 수 없습니다') ? 'error-message--server' : ''}`}>
+              {error.includes('서버에 연결할 수 없습니다') && <span className="error-icon">⚠ </span>}
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"

@@ -165,8 +165,14 @@ sequenceDiagram
 
     alt ✅ 성공 (status.code == "0000")
         Hook ->> UI: onSuccess(username) 실행
-    else ❌ 실패 (기타 코드 또는 에러)
-        Hook ->> Hook: 에러 상태 업데이트 (setError)
+    else ❌ 로그인 실패 (기타 status.code)
+        Hook ->> UI: 에러 메시지 표시 (빨간 박스)
+    else 🌐 서버 연결 불가 (ECONNREFUSED 등)
+        Main -->> SVC: { success: false, error: "서버에 연결할 수 없습니다..." }
+        Hook ->> UI: 서버 상태 확인 안내 메시지 표시 (노란 박스)
+    else 🔴 HTTP 오류 (4xx / 5xx)
+        Main -->> SVC: { success: false, error: "서버 오류 (HTTP NNN)" }
+        Hook ->> UI: HTTP 에러 메시지 표시 (빨간 박스)
     end
 ```
 
@@ -179,6 +185,18 @@ sequenceDiagram
 | **Service (Renderer)** | `src/renderer/api/` | **[IPC 래퍼]** Preload API를 호출하기 쉬운 함수로 래핑 |
 | **Preload** | `src/preload/preload.ts` | **[보안 브릿지]** 메인과 렌더러 사이의 안전한 통로 제공 |
 | **Main (Node.js)** | `src/main/api/` | **[네트워크/시스템]** 실제 API 호출 및 시스템 자원 접근 |
+
+### 4.3 에러 처리 전략 (Error Handling)
+
+API 통신 오류는 Main 프로세스(`ipcHandlers.ts`)에서 유형별로 분류 후 사용자 친화적 메시지로 변환됩니다.
+
+| 오류 유형 | 조건 | 사용자 메시지 | UI 표시 |
+| :--- | :--- | :--- | :--- |
+| **서버 연결 불가** | `ECONNREFUSED`, `ETIMEDOUT`, `ERR_NETWORK` 등 | "서버에 연결할 수 없습니다. 서버 상태를 확인해주세요." | 노란 경고 박스 (⚠) |
+| **HTTP 오류** | 4xx / 5xx 응답 | "서버 오류가 발생했습니다. (HTTP NNN)" 또는 서버 메시지 | 빨간 에러 박스 |
+| **로그인 실패** | `info` 필드 비어있음 | "로그인 정보가 올바르지 않습니다." | 빨간 에러 박스 |
+| **비정상 응답 코드** | `status.code != "0000"` | 서버 메시지 또는 "로그인 실패 (코드: NNN)" | 빨간 에러 박스 |
+| **응답 구조 불일치** | `response.data` 미존재 | "서버 응답 형식이 올바르지 않습니다." | 빨간 에러 박스 |
 
 ---
 
