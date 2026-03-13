@@ -44,26 +44,33 @@ pnpm dev
 Electron의 보안 및 성능 모범 사례에 따라 계층화된 아키텍처를 가지고 있습니다.
 
 ```text
-electron_test/
+study_electron/
 ├── src/
-│   ├── main/           # 메인 프로세스 (Node.js 환경)
-│   │   ├── api/        # Main 전용 API 서비스 (Axios Instance, IPC 핸들러)
-│   │   │   ├── axiosInstance.ts # 백엔드 통신용 Axios 설정
-│   │   │   └── ipcHandlers.ts   # Renderer의 요청을 처리하는 IPC 리스너
-│   │   └── main.ts     # 앱 생명주기 및 브라우저 윈도우 관리
-│   ├── preload/        # 프리로드 스크립트 (Main과 Renderer 사이의 가교)
-│   │   └── preload.ts  # 안전한 IPC 통신 설정 (ContextBridge)
-│   └── renderer/       # 렌더러 프로세스 (React UI 환경)
-│       ├── api/        # Renderer 전용 서비스 (IPC 호출 래퍼 - authService.ts 등)
-│       ├── components/ # React 컴포넌트 및 스타일 (Login, TicketSales 등)
-│       ├── hooks/      # Custom Hooks (비즈니스 로직 분리 - useAuth.ts 등)
-│       ├── types/      # TypeScript 타입 정의 (auth.ts, electron.d.ts 등)
-│       ├── App.tsx     # 메인 앱 컴포넌트 및 라우팅 로직
-│       └── renderer.tsx # React 진입점 (DOM 렌더링)
-├── forge.config.ts     # Electron Forge 설정 파일
-├── index.html          # 메인 HTML 템플릿
-├── package.json        # 의존성 및 스크립트 정의
-└── tsconfig.json       # TypeScript 설정
+│   ├── main/                    # 메인 프로세스 (Node.js 환경)
+│   │   ├── api/
+│   │   │   ├── handlers/        # 도메인별 IPC 핸들러 (확장 포인트)
+│   │   │   │   └── authHandlers.ts   # Auth 도메인 핸들러 (auth:login 등)
+│   │   │   ├── utils/
+│   │   │   │   └── ipcErrorHandler.ts # Axios 에러 → IpcResult 변환 공통 유틸
+│   │   │   ├── axiosInstance.ts # 백엔드 통신용 Axios 설정 + setAuthToken()
+│   │   │   └── ipcHandlers.ts   # 모든 핸들러를 등록하는 진입점 (오케스트레이터)
+│   │   └── main.ts              # 앱 생명주기 및 브라우저 윈도우 관리
+│   ├── preload/                 # 프리로드 스크립트 (Main과 Renderer 사이의 가교)
+│   │   └── preload.ts           # 도메인별 네임스페이스 브릿지 (ContextBridge)
+│   └── renderer/                # 렌더러 프로세스 (React UI 환경)
+│       ├── api/                 # IPC 호출 래퍼 서비스 (authService.ts 등)
+│       ├── components/          # React 컴포넌트 및 스타일 (Login, TicketSales 등)
+│       ├── hooks/               # Custom Hooks (비즈니스 로직 분리 - useAuth.ts 등)
+│       ├── types/
+│       │   ├── auth.ts          # Auth 관련 요청/응답 타입
+│       │   ├── ipc.ts           # IPC 공통 응답 타입 (IpcResponse<T>)
+│       │   └── electron.d.ts    # window.electron 전역 타입 선언
+│       ├── App.tsx              # 메인 앱 컴포넌트 및 라우팅 로직
+│       └── renderer.tsx         # React 진입점 (DOM 렌더링)
+├── forge.config.ts              # Electron Forge 설정 파일
+├── index.html                   # 메인 HTML 템플릿
+├── package.json                 # 의존성 및 스크립트 정의
+└── tsconfig.json                # TypeScript 설정
 ```
 
 ---
@@ -77,19 +84,33 @@ graph TD
     subgraph "Electron App (Client)"
         subgraph "Renderer Process (UI)"
             UI[React / Vite]
-            API_SVC[authService / API Wrapper]
+            API_SVC[도메인 서비스 / API Wrapper\nauthService, ticketService, ...]
+        end
+
+        subgraph "Preload (Bridge)"
+            BRIDGE[ContextBridge\nwindow.electron.auth.*\nwindow.electron.ticket.*\n...]
         end
 
         subgraph "Main Process (Node.js)"
-            MAIN[Main Process]
-            AXIOS[Axios Instance]
+            HANDLERS[IPC 핸들러 오케스트레이터\nipcHandlers.ts]
+            AUTH_H[authHandlers.ts]
+            TICKET_H[ticketHandlers.ts ...]
+            UTIL[ipcErrorHandler\n공통 에러 변환]
+            AXIOS[Axios Instance\n+ setAuthToken]
             PRINTER[프린터 제어 - node-thermal-printer]
             SERIAL[시리얼 통신 - serialport]
             SQLITE[로컬 DB - better-sqlite3]
             UPDATER[자동 업데이트 - electron-updater]
         end
-        
-        UI <-->|IPC Bridge| MAIN
+
+        UI <-->|IpcResponse T| BRIDGE
+        BRIDGE <-->|ipcRenderer.invoke| HANDLERS
+        HANDLERS --> AUTH_H
+        HANDLERS --> TICKET_H
+        AUTH_H --> UTIL
+        TICKET_H --> UTIL
+        AUTH_H --> AXIOS
+        TICKET_H --> AXIOS
     end
 
     subgraph "Backend Server"
@@ -97,12 +118,8 @@ graph TD
         DB[(External DB)]
     end
 
-    MAIN <-->|HTTP/HTTPS| SB
+    AXIOS <-->|HTTP/HTTPS| SB
     SB <--> DB
-
-    %% 상세 설명 연결
-    UI -.->|온라인 API 호출| API_SVC
-    API_SVC -.->|로컬 처리 호출| MAIN
     MAIN -.->|오프라인 sync queue| SQLITE
 ```
 
@@ -182,13 +199,97 @@ sequenceDiagram
 | :--- | :--- | :--- |
 | **Component** | `src/renderer/components/` | **[사용자 접점]** UI 렌더링, 사용자 입력 수집 |
 | **Hook** | `src/renderer/hooks/` | **[상태 관리]** UI 상태(로딩, 에러) 제어 및 비즈니스 로직 |
-| **Service (Renderer)** | `src/renderer/api/` | **[IPC 래퍼]** Preload API를 호출하기 쉬운 함수로 래핑 |
-| **Preload** | `src/preload/preload.ts` | **[보안 브릿지]** 메인과 렌더러 사이의 안전한 통로 제공 |
-| **Main (Node.js)** | `src/main/api/` | **[네트워크/시스템]** 실제 API 호출 및 시스템 자원 접근 |
+| **Service (Renderer)** | `src/renderer/api/` | **[IPC 래퍼]** Preload API를 `IpcResponse<T>` 기반으로 래핑 |
+| **Types** | `src/renderer/types/ipc.ts` | **[공통 타입]** `IpcResponse<T>` – 모든 IPC 응답의 공통 인터페이스 |
+| **Preload** | `src/preload/preload.ts` | **[보안 브릿지]** 도메인별 네임스페이스로 분리된 ContextBridge |
+| **IPC 오케스트레이터** | `src/main/api/ipcHandlers.ts` | **[진입점]** 모든 도메인 핸들러를 한 곳에서 등록 |
+| **Domain Handler** | `src/main/api/handlers/` | **[도메인 로직]** 채널별 비즈니스 처리 (파일 1개 = 도메인 1개) |
+| **Error Util** | `src/main/api/utils/ipcErrorHandler.ts` | **[공통 에러 변환]** Axios 에러 → `IpcResult` 로 일관된 변환 |
+| **Axios Instance** | `src/main/api/axiosInstance.ts` | **[HTTP 클라이언트]** 백엔드 통신 + `setAuthToken()` 토큰 관리 |
 
-### 4.3 에러 처리 전략 (Error Handling)
+### 4.3 새 도메인 API 추가 가이드 (Extensibility)
 
-API 통신 오류는 Main 프로세스(`ipcHandlers.ts`)에서 유형별로 분류 후 사용자 친화적 메시지로 변환됩니다.
+새 도메인(예: `ticket`, `device`, `open`)의 API를 추가할 때 아래 5단계를 따릅니다.
+
+#### Step 1 — Main Handler 생성
+`src/main/api/handlers/ticketHandlers.ts` 파일 생성 후 `registerTicketHandlers()` 구현:
+
+```typescript
+// src/main/api/handlers/ticketHandlers.ts
+import { ipcMain } from 'electron';
+import api from '../axiosInstance';
+import { handleAxiosError, IpcResult } from '../utils/ipcErrorHandler';
+
+export const registerTicketHandlers = (): void => {
+  ipcMain.handle('ticket:getSaleList', async (_event, params): Promise<IpcResult> => {
+    try {
+      const response = await api.get('/api/air/ticket/sales', { params });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return handleAxiosError(error, 'ticket:getSaleList');
+    }
+  });
+};
+```
+
+#### Step 2 — 오케스트레이터에 등록
+`src/main/api/ipcHandlers.ts` 에 한 줄 추가:
+
+```typescript
+import { registerTicketHandlers } from './handlers/ticketHandlers';
+
+export const setupIpcHandlers = (): void => {
+  registerAuthHandlers();
+  registerTicketHandlers(); // ← 추가
+};
+```
+
+#### Step 3 — Preload 브릿지 추가
+`src/preload/preload.ts` 에 네임스페이스 브릿지 추가:
+
+```typescript
+const ticketBridge = {
+  getSaleList: (params: unknown) => ipcRenderer.invoke('ticket:getSaleList', params),
+};
+
+contextBridge.exposeInMainWorld('electron', {
+  auth: authBridge,
+  ticket: ticketBridge, // ← 추가
+});
+```
+
+#### Step 4 — 전역 타입 선언 추가
+`src/renderer/types/electron.d.ts` 에 타입 추가:
+
+```typescript
+interface Window {
+  electron: {
+    auth: { ... };
+    ticket: {
+      getSaleList: (params: TicketSaleParams) => Promise<IpcResponse<ApiResponse<TicketSale[]>>>;
+    };
+  };
+}
+```
+
+#### Step 5 — Renderer 서비스 파일 생성
+`src/renderer/api/ticketService.ts` 생성 후 컴포넌트/훅에서 사용:
+
+```typescript
+import { IpcResponse } from '../types/ipc';
+
+export const ticketService = {
+  getSaleList: async (params: TicketSaleParams) => {
+    const result: IpcResponse<...> = await window.electron.ticket.getSaleList(params);
+    if (!result.success) throw new Error(result.error);
+    return result.data;
+  },
+};
+```
+
+### 4.4 에러 처리 전략 (Error Handling)
+
+API 통신 오류는 `src/main/api/utils/ipcErrorHandler.ts`의 `handleAxiosError()`에서 공통 처리되며, 모든 도메인 핸들러가 이를 재사용합니다.
 
 | 오류 유형 | 조건 | 사용자 메시지 | UI 표시 |
 | :--- | :--- | :--- | :--- |

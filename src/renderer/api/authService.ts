@@ -1,30 +1,29 @@
-import { LoginRequest, LoginResponse } from '../types/auth';
+import { LoginRequest, LoginResponse, ApiResponse } from '../types/auth';
+import { IpcResponse } from '../types/ipc';
 
 export const authService = {
   /**
    * 로그인 API 호출 (IPC 통신 방식)
-   * Renderer -> Main (Node.js) -> Backend
+   * Renderer -> Preload Bridge -> Main (Node.js) -> Backend
    */
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const result = await window.electron.auth.login(credentials);
+    const result: IpcResponse<ApiResponse<LoginResponse>> =
+      await window.electron.auth.login(credentials);
 
     console.log('[Service] IPC Response:', result);
 
-    // 메인 프로세스에서 success: false를 명시적으로 반환한 경우
-    if (result.success === false) {
+    // Main 프로세스에서 success: false를 명시적으로 반환한 경우
+    if (!result.success) {
       console.log('[Service] Login Failed - Main returned error:', result.error);
-      const errorMessage = typeof result.error === 'string'
-        ? result.error
-        : '로그인 중 오류가 발생했습니다.';
-      throw new Error(errorMessage);
+      throw new Error(result.error ?? '로그인 중 오류가 발생했습니다.');
     }
 
-    // 성공 케이스만 처리
-    if (result.success && result.data) {
+    // 성공 케이스 처리
+    if (result.data) {
       const { status, info } = result.data;
 
       // 백엔드 성공 코드 "0000" 체크
-      if (status && status.code === '0000') {
+      if (status?.code === '0000') {
         console.log('[Service] Login Success - User Info:', info);
         return info;
       }
